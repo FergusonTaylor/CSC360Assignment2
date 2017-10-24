@@ -5,6 +5,8 @@
 #include<sys/types.h>
 #include<unistd.h>
 
+#include "CustomerQueue.h"
+
 pthread_mutex_t queue1Mutex;
 pthread_mutex_t queue2Mutex;
 pthread_mutex_t queue3Mutex;
@@ -20,12 +22,6 @@ int queue2Length = 0;
 int queue3Length = 0;
 int queue4Length = 0;
 
-typedef struct Customer
-{
-    int ID;
-    int arrivalTime;
-    int serviceTime; 
-}Customer;
 void PrintCustomer(Customer customer)
 {
     printf("customer ID: %d\n",customer.ID);
