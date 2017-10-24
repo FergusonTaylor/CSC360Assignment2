@@ -5,7 +5,6 @@ CustomerNode* NewCustomerNode(Customer customer)
   CustomerNode* newCustomerNode = (CustomerNode*)malloc(sizeof(CustomerNode));
   newCustomerNode->customer = customer;
   newCustomerNode->next = NULL;
-  newCustomerNode->prev = NULL;
   return newCustomerNode;
 }
 void PrintList(CustomerNode** head)
@@ -16,20 +15,20 @@ void PrintList(CustomerNode** head)
     return;
   }
   CustomerNode currentCustomerNode = **head;
-  printf("pid: %3d , ", currentCustomerNode.pid);
+  printf("customer ID: %3d , ", currentCustomerNode.customer.ID);
   while(currentCustomerNode.next != NULL )
   {
     currentCustomerNode = *(currentCustomerNode.next);
-    printf(" %3d ,", currentCustomerNode.pid);
+    printf("Customer ID: %3d ,", currentCustomerNode.customer.ID);
   }
   printf("\n");
 }
-CustomerNode* FindCustomerNodePointer(int pid, CustomerNode* head)
+CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
 {
   CustomerNode* currentCustomerNode = head;
   while(currentCustomerNode !=NULL)
   {
-    if(currentCustomerNode->pid == pid)
+    if(currentCustomerNode->customer.ID == customer.ID)
     {
       break;
     }
@@ -37,31 +36,27 @@ CustomerNode* FindCustomerNodePointer(int pid, CustomerNode* head)
   }
   return currentCustomerNode;
 }
-void RemoveCustomerNode(CustomerNode* toDelete,CustomerNode** headPointer)
+Customer PopCustomerNode(CustomerNode** headPointer)
 {
-  if(*headPointer == toDelete)
-  {
-    *headPointer = toDelete->next;
-  }
-  if(toDelete->next != NULL)
-  {
-    toDelete->next->prev = toDelete->prev;
-  }
-  if(toDelete->prev !=NULL)
-  {
-    toDelete->prev->next = toDelete->next;
-  }
-  free(toDelete);
+    Customer customer = *headPointer->customer;
+    CustomerNode toFree = *headPointer;
+    *headPointer = *headPointer ->next;
+    //not sure if this frees the customer
+    free(toFree);
+    return customer;
 }
-void InsertAtHead(int pid, CustomerNode** head)
+void InsertAtTail(Customer customer, CustomerNode** head)
 {
-  CustomerNode* newCustomerNode = NewCustomerNode(pid);
+  CustomerNode* newCustomerNode = NewCustomerNode(customer);
   if(*head == NULL)
   {
     *head = newCustomerNode;
     return;
   }
-  (*head)->prev = newCustomerNode;
-  newCustomerNode->next = *head;
-  *head = newCustomerNode;
+  CustomerNode* currentCustomerNode = *head;
+  while(currentCustomerNode->next != NULL)
+  {
+      currentCustomerNode = currentCustomerNode->next;
+  }
+  currentCustomerNode->next = newCustomerNode;
 }
