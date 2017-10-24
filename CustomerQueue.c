@@ -38,11 +38,11 @@ CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
 }
 Customer PopCustomerNode(CustomerNode** headPointer)
 {
-    Customer customer = *headPointer->customer;
-    CustomerNode toFree = *headPointer;
-    *headPointer = *headPointer ->next;
+    Customer customer = (*headPointer)->customer;
+    CustomerNode* toFree = (*headPointer);
+    *headPointer = (*headPointer)->next;
     //not sure if this frees the customer
-    free(toFree);
+    //free(toFree);
     return customer;
 }
 void InsertAtTail(Customer customer, CustomerNode** head)
@@ -59,4 +59,9 @@ void InsertAtTail(Customer customer, CustomerNode** head)
       currentCustomerNode = currentCustomerNode->next;
   }
   currentCustomerNode->next = newCustomerNode;
+
+}
+int main()
+{
+
 }

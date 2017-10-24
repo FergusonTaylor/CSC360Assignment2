@@ -22,6 +22,11 @@ int queue2Length = 0;
 int queue3Length = 0;
 int queue4Length = 0;
 
+CustomerNode* headOfQueue1 = NULL;
+CustomerNode* headOfQueue2 = NULL;
+CustomerNode* headOfQueue3 = NULL;
+CustomerNode* headOfQueue4 = NULL;
+
 void PrintCustomer(Customer customer)
 {
     printf("customer ID: %d\n",customer.ID);
@@ -110,6 +115,7 @@ void CustomerFunction(Customer customer)
 
 int main( int argc, char* argv[] )
 {
+    CustomerNode* headOfStagingQueue = NULL;
     char* fileName = argv[1];
     char line[1024];
     size_t len = sizeof(line);
@@ -129,6 +135,9 @@ int main( int argc, char* argv[] )
         }
         printf("printing customer\n");
         PrintCustomer(*customer);
+        
+        InsertAtTail(*customer, &headOfStagingQueue);
+
         free(customer);
     }
     fclose(customerFile);
