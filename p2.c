@@ -141,7 +141,9 @@ int main( int argc, char* argv[] )
         InsertAtTail(customer, &headOfStagingQueue);
         printf("after inserting at tail \n");
         PrintList(&headOfStagingQueue);
+
         //free(customer);
     }
     fclose(customerFile);
+
 }

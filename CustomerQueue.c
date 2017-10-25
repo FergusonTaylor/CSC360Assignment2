@@ -44,8 +44,13 @@ CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
   customer.serviceTime = customerToCopy.serviceTime;
   return customer;
 }*/
+
 Customer PopCustomerNode(CustomerNode** headPointer)
 {
+    if(*headPointer == NULL)
+    {
+      return (const struct Customer){ -1, 0, 0 };
+    }
     Customer customer = *((*headPointer)->customer);    
     CustomerNode* toFree = (*headPointer);
     *headPointer = (*headPointer)->next;
