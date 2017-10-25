@@ -133,12 +133,15 @@ int main( int argc, char* argv[] )
             numberOfCustomers = numberOfCustomers -1;
             continue;
         }
-        printf("printing customer\n");
-        PrintCustomer(*customer);
-        
-        InsertAtTail(*customer, &headOfStagingQueue);
+        //printf("printing customer\n");
+        //PrintCustomer(*customer);
+        //printf("before inserting at tail \n");
+       // PrintList(&headOfStagingQueue);
 
-        free(customer);
+        InsertAtTail(customer, &headOfStagingQueue);
+        printf("after inserting at tail \n");
+        PrintList(&headOfStagingQueue);
+        //free(customer);
     }
     fclose(customerFile);
 }

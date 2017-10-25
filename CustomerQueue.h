@@ -8,12 +8,12 @@ typedef struct Customer
 }Customer;
 typedef struct CustomerNode
 {
-  Customer customer;
+  Customer* customer;
   struct CustomerNode* next;
 }CustomerNode;
 
-CustomerNode* NewCustomerNode(Customer customer);
+CustomerNode* NewCustomerNode(Customer* customer);
 void PrintList(CustomerNode** head);
 CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head);
 Customer PopCustomerNode(CustomerNode** headPointer);
-void InsertAtTail(Customer customer, CustomerNode** head);
+void InsertAtTail(Customer* customer, CustomerNode** head);

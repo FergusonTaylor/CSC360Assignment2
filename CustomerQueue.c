@@ -1,6 +1,6 @@
 #include "CustomerQueue.h"
 
-CustomerNode* NewCustomerNode(Customer customer)
+CustomerNode* NewCustomerNode(Customer* customer)
 {
   CustomerNode* newCustomerNode = (CustomerNode*)malloc(sizeof(CustomerNode));
   newCustomerNode->customer = customer;
@@ -15,11 +15,11 @@ void PrintList(CustomerNode** head)
     return;
   }
   CustomerNode currentCustomerNode = **head;
-  printf("customer ID: %3d , ", currentCustomerNode.customer.ID);
+  printf("customer ID: %3d , ", currentCustomerNode.customer->ID);
   while(currentCustomerNode.next != NULL )
   {
     currentCustomerNode = *(currentCustomerNode.next);
-    printf("Customer ID: %3d ,", currentCustomerNode.customer.ID);
+    printf("Customer ID: %3d ,", currentCustomerNode.customer->ID);
   }
   printf("\n");
 }
@@ -28,7 +28,7 @@ CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
   CustomerNode* currentCustomerNode = head;
   while(currentCustomerNode !=NULL)
   {
-    if(currentCustomerNode->customer.ID == customer.ID)
+    if(currentCustomerNode->customer->ID == customer.ID)
     {
       break;
     }
@@ -36,16 +36,24 @@ CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
   }
   return currentCustomerNode;
 }
+/*Customer CopyOf(Customer customerToCopy)
+{
+  Customer customer = (Customer)malloc(sizeof(Customer));
+  customer.ID = customerToCopy.ID;
+  customer.arrivalTime = customerToCopy.arrivalTime;
+  customer.serviceTime = customerToCopy.serviceTime;
+  return customer;
+}*/
 Customer PopCustomerNode(CustomerNode** headPointer)
 {
-    Customer customer = (*headPointer)->customer;
+    Customer customer = *((*headPointer)->customer);    
     CustomerNode* toFree = (*headPointer);
     *headPointer = (*headPointer)->next;
-    //not sure if this frees the customer
-    //free(toFree);
+
+    free(toFree);
     return customer;
 }
-void InsertAtTail(Customer customer, CustomerNode** head)
+void InsertAtTail(Customer* customer, CustomerNode** head)
 {
   CustomerNode* newCustomerNode = NewCustomerNode(customer);
   if(*head == NULL)
@@ -59,9 +67,5 @@ void InsertAtTail(Customer customer, CustomerNode** head)
       currentCustomerNode = currentCustomerNode->next;
   }
   currentCustomerNode->next = newCustomerNode;
-
-}
-int main()
-{
 
 }
