@@ -7,25 +7,14 @@
 
 #include "CustomerQueue.h"
 
-pthread_mutex_t queue1Mutex;
-pthread_mutex_t queue2Mutex;
-pthread_mutex_t queue3Mutex;
-pthread_mutex_t queue4Mutex;
+pthread_mutex_t queueMutexs[4];
 
-pthread_cond_t queue1Cond;
-pthread_cond_t queue2Cond;
-pthread_cond_t queue3Cond;
-pthread_cond_t queue4Cond;
+pthread_cond_t queueConds[4];
 
-int queue1Length = 0;
-int queue2Length = 0;
-int queue3Length = 0;
-int queue4Length = 0;
+int queueLengths[4] = {0, 0 , 0 ,0};
 
-CustomerNode* headOfQueue1 = NULL;
-CustomerNode* headOfQueue2 = NULL;
-CustomerNode* headOfQueue3 = NULL;
-CustomerNode* headOfQueue4 = NULL;
+CustomerNode* headOfQueues[4] = {NULL,NULL,NULL,NULL};
+
 
 void PrintCustomer(Customer customer)
 {
@@ -75,10 +64,44 @@ Customer* LineToCustomer(char* line, size_t len)
     }
     return newCustomer;
 }
-//TODO: find shortest queue
-void FindShortestQueue(int* localQueueLengthPtr, pthread_mutex_t* localMutex, pthread_cond_t* localCondVar)
-{
 
+void ShuffleArray(int* array, int size)
+{
+    int temp;
+    int randIndex;
+    int i;
+    for(i = 0; i < size; i++)
+    {
+        int temp = array[i];
+        int randIndex = (rand() % 4);
+
+        array[i] = array[randIndex];
+        array[randIndex] = temp;
+    }
+}
+void FindShortestQueue(int* localQueueLengthPtr, pthread_mutex_t* localMutex, pthread_cond_t* localCondVar, CustomerNode** localQueueHeadPtr )
+{    
+    //because we find the shortest queue randomly, if there is a tie which min length queue is chosen will be random
+    int indexArray[4] = {0,1,2,3};
+    ShuffleArray(indexArray,4);
+    
+    int minQueueLength;
+    int indexOfMinQueue;
+    int i;
+    for(i = 0; i < 4; i ++)
+    {
+        minQueueLength = queueLengths[indexArray[i]];
+        indexOfMinQueue = indexArray[i];
+        if(minQueueLength <= queueLengths[indexArray[(i+1)%4]] && minQueueLength <= queueLengths[indexArray[(i+2)%4]] &&
+        minQueueLength <= queueLengths[indexArray[(i+3)%4]])
+        {
+            break;
+        }
+    }
+    localQueueLengthPtr = &(queueLengths[indexOfMinQueue]);
+    localMutex = &(queueMutexs[indexOfMinQueue]);
+    localCondVar = &(queueConds[indexOfMinQueue]);
+    localQueueHeadPtr = &(headOfQueues[indexOfMinQueue]);
 }
 int ClerkWhoCalled()
 {
@@ -91,10 +114,12 @@ void CustomerFunction(Customer customer)
     int* localQueueLengthPtr;
     pthread_mutex_t* localMutex;
     pthread_cond_t* localCondVar;
-    FindShortestQueue(localQueueLengthPtr, localMutex, localCondVar);
+    CustomerNode** localQueueHead;
+
+    FindShortestQueue(localQueueLengthPtr, localMutex, localCondVar,localQueueHead);
     
     pthread_mutex_lock(localMutex);
-    FindShortestQueue(localQueueLengthPtr, localMutex, localCondVar);
+    FindShortestQueue(localQueueLengthPtr, localMutex, localCondVar,localQueueHead);
     localQueueLengthPtr = localQueueLengthPtr + 1;
 
     while(pthread_cond_wait(localCondVar, localMutex));
@@ -120,6 +145,8 @@ int main( int argc, char* argv[] )
     char line[1024];
     size_t len = sizeof(line);
     FILE* customerFile = fopen(fileName, "r");
+    //seed random num gen
+    srand(time(NULL));
 
     fgets(line, len, customerFile);
     int numberOfCustomers = atoi(line);
@@ -136,12 +163,13 @@ int main( int argc, char* argv[] )
         //printf("printing customer\n");
         //PrintCustomer(*customer);
         //printf("before inserting at tail \n");
-       // PrintList(&headOfStagingQueue);
+        //PrintList(&headOfStagingQueue);
 
         InsertAtTail(customer, &headOfStagingQueue);
         printf("after inserting at tail \n");
         PrintList(&headOfStagingQueue);
-
+        printf("finding shortest queue\n");
+        FindShortestQueue(NULL,NULL,NULL,NULL);
         //free(customer);
     }
     fclose(customerFile);
