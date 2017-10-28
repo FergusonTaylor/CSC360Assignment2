@@ -117,6 +117,8 @@ int ClerkWhoCalled()
 void * CustomerFunction( void * customerVoid)
 {
     Customer* customer = (Customer*)customerVoid;
+    printf("in Customer Thread\n");
+    pthread_exit(NULL);
     usleep(customer->arrivalTime * 100 / sysconf(_SC_CLK_TCK));
     int* localQueueLengthPtr;
     pthread_mutex_t* localMutex;
@@ -195,10 +197,13 @@ int main( int argc, char* argv[] )
     int customerThreadIndex = 0;
     while(customer.ID != -1)
     {
-        if(pthread_create(&customerThreads[customerThreadIndex], NULL, CustomerFunction, (void* )(&customer)))
+        if(!pthread_create(&customerThreads[customerThreadIndex], NULL, CustomerFunction, (void* )(&customer)))
         {    
             customerThreadIndex++;
             customer = PopCustomerNode(&headOfStagingQueue);
+            printf("customer ID: %d ", customer.ID);
         }
+        
     }
+    usleep(10000);
 }
