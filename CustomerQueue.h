@@ -15,5 +15,5 @@ typedef struct CustomerNode
 CustomerNode* NewCustomerNode(Customer* customer);
 void PrintList(CustomerNode** head);
 CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head);
-Customer PopCustomerNode(CustomerNode** headPointer);
+Customer* PopCustomerNode(CustomerNode** headPointer);
 void InsertAtTail(Customer* customer, CustomerNode** head);

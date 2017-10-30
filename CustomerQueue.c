@@ -1,10 +1,13 @@
 #include "CustomerQueue.h"
 
+
 CustomerNode* NewCustomerNode(Customer* customer)
 {
   CustomerNode* newCustomerNode = (CustomerNode*)malloc(sizeof(CustomerNode));
+  
   newCustomerNode->customer = customer;
   newCustomerNode->next = NULL;
+  printf("made new customer Node the customer has ID, %d\n", customer->ID);
   return newCustomerNode;
 }
 void PrintList(CustomerNode** head)
@@ -45,13 +48,13 @@ CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
   return customer;
 }*/
 
-Customer PopCustomerNode(CustomerNode** headPointer)
+Customer* PopCustomerNode(CustomerNode** headPointer)
 {
     if(*headPointer == NULL)
     {
-      return (const struct Customer){ -1, 0, 0 };
+      return NULL;
     }
-    Customer customer = *((*headPointer)->customer);    
+    Customer* customer = (*headPointer)->customer;    
     CustomerNode* toFree = (*headPointer);
     *headPointer = (*headPointer)->next;
 
@@ -61,12 +64,13 @@ Customer PopCustomerNode(CustomerNode** headPointer)
 void InsertAtTail(Customer* customer, CustomerNode** head)
 {
   CustomerNode* newCustomerNode = NewCustomerNode(customer);
+  printf("inserting Customer into queue with ID: %d\n", newCustomerNode->customer->ID);
   if(*head == NULL)
   {
     *head = newCustomerNode;
     return;
   }
-  CustomerNode* currentCustomerNode = *head;
+  CustomerNode* currentCustomerNode = (*head);
   while(currentCustomerNode->next != NULL)
   {
       currentCustomerNode = currentCustomerNode->next;
