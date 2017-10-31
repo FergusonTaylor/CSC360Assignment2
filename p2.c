@@ -78,18 +78,18 @@ void ShuffleArray(int* array, int size)
     for(i = 0; i < size; i++)
     {
         int temp = array[i];
-        int randIndex = (rand() % 4);
+        int randIndex = (rand() % size);
 
         array[i] = array[randIndex];
         array[randIndex] = temp;
     }
 }
-void FindLongestQueue(int* localQueueLengthPtr, pthread_mutex_t* localMutex, pthread_cond_t* localCondVar, CustomerNode** localQueueHeadPtr)
+void FindLongestQueue(pthread_mutex_t* localMutex, pthread_cond_t* localCondVar, CustomerNode** localQueueHeadPtr,int* queueID)
 {    
-    //because we find the shortest queue randomly, if there is a tie which min length queue is chosen will be random
+    //because we find the shortest queue randomly, if there is a tie which max length queue is chosen will be random
     int indexArray[4] = {0,1,2,3};
     ShuffleArray(indexArray,4);
-    
+    //printf("shuffled Array: %d, %d, %d, %d\n",indexArray[0],indexArray[1],indexArray[2],indexArray[3]);
     int maxQueueLength= queueLengths[indexArray[0]];
     int maxQueueindex = indexArray[0];
 
@@ -100,21 +100,21 @@ void FindLongestQueue(int* localQueueLengthPtr, pthread_mutex_t* localMutex, pth
     {
         currentIndex = indexArray[i];
         currentQueue = queueLengths[currentIndex];
-
         if(currentQueue > maxQueueLength)
         {
             maxQueueLength = currentQueue;
             maxQueueindex = currentIndex;
+            //printf("changing queue ID to %d\n", currentIndex);
         }
     }
     //printf("found Longest Queue");
-    *localQueueLengthPtr = queueLengths[maxQueueindex];
+    *queueID = maxQueueindex;
     *localMutex = queueMutexs[maxQueueindex];
     *localCondVar = queueConds[maxQueueindex];
     *localQueueHeadPtr = headOfQueues[maxQueueindex];
 
 }
-void FindShortestQueue(int* localQueueLengthPtr, pthread_mutex_t* localMutex, pthread_cond_t* localCondVar, CustomerNode** localQueueHeadPtr,int* QueueID )
+void FindShortestQueue(pthread_mutex_t* localMutex, pthread_cond_t* localCondVar, CustomerNode** localQueueHeadPtr,int* queueID )
 {    
     //because we find the shortest queue randomly, if there is a tie which min length queue is chosen will be random
     int indexArray[4] = {0,1,2,3};
@@ -135,12 +135,11 @@ void FindShortestQueue(int* localQueueLengthPtr, pthread_mutex_t* localMutex, pt
         {
             minQueueLength = currentQueueLength;
             minQueueIndex = currentIndex;
-            *QueueID = currentIndex;
         }
     }
     //printf("minQueueIndex: %d minQueueLength: %d\n", minQueueIndex, minQueueLength);
     //printf("returning queue with head customer ID: %d\n",headOfQueues[minQueueIndex]->customer->ID );
-    *localQueueLengthPtr = queueLengths[minQueueIndex];
+    *queueID = currentIndex;
     *localMutex = queueMutexs[minQueueIndex];
     *localCondVar = queueConds[minQueueIndex];
     *localQueueHeadPtr = headOfQueues[minQueueIndex];
@@ -153,7 +152,7 @@ int ClerkWhoCalled()
 void * ClerkFunction(void * clerkVoid)
 {
     int clerkID = *((int*)clerkVoid);
-    int localQueueLength;
+    int queueID;
     pthread_mutex_t localMutex;
     pthread_cond_t localCondVar;
     CustomerNode* localQueueHeadPtr;
@@ -162,16 +161,42 @@ void * ClerkFunction(void * clerkVoid)
         //printf("in clerk function\n");
         sem_wait(&numberOfCustomersThreads);
 
-        //printf("semaphore posted\n");
+        printf("semaphore posted\n");
+        printf("queue memory addresses: %p, %p, %p, %p\n",(void *)&headOfQueues[0],
+        (void *)&headOfQueues[1],(void *)&headOfQueues[2],(void *)&headOfQueues[3]);
+        //CustomerNode* temp = headOfQueues[0];
+        PrintList(&(headOfQueues[0]));
+        //PrintList(&headOfQueues[1]);
+        //PrintList(&headOfQueues[2]);
+        //PrintList(&headOfQueues[3]);
+
         pthread_mutex_lock(&queueChooserMutex);
-        FindLongestQueue(&localQueueLength,&localMutex,&localCondVar,&localQueueHeadPtr);
-        PopCustomerNode(&localQueueHeadPtr);
-        localQueueLength = localQueueLength -1;
+        FindLongestQueue(&localMutex,&localCondVar,&localQueueHeadPtr,&queueID);
+        localQueueHeadPtr = headOfQueues[queueID];
+        //printf("queue lengths: %d, %d, %d, %d\n",queueLengths[0],queueLengths[1],queueLengths[2], queueLengths[3] );
+        printf("longest queue found was queue %d with  length of %d\n", queueID, queueLengths[queueID]);
+        localQueueHeadPtr = headOfQueues[queueID];
+        PrintList(&headOfQueues[queueID]);
+        Customer* customer = PopCustomerNode(&headOfQueues[queueID]);
+        if(customer == NULL)
+        {
+            printf("customer popped off by clerk was null\n");
+        }
+        else
+        {
+            printf("customer popped off by clerk with ID %d \n", customer->ID);
+        }
+        queueLengths[queueID] = queueLengths[queueID] -1;
+        if(queueLengths[queueID] < 0)
+        {
+            printf("queue length went below 0 we have a problem\n");
+        }
         pthread_mutex_unlock(&queueChooserMutex);
 
         pthread_mutex_lock(&localMutex);
         pthread_cond_signal(&localCondVar);
         pthread_mutex_unlock(&localMutex);
+        //usleep(100000);
     }
     return NULL;
 }
@@ -183,28 +208,31 @@ void * CustomerFunction( void * customerVoid)
     //printf("sleeping for %d, with customer ID: %d\n", customer->arrivalTime * 100000, customer->ID);
     usleep(customer->arrivalTime * 100000);
     //printf("thread with customer id: %d woke up\n",customer->ID);
-    int localQueueLength;
-    int QueueID;
+    int queueID;
     pthread_mutex_t localMutex;
     pthread_cond_t localCondVar;
     CustomerNode* localQueueHead;
     pthread_mutex_lock(&queueChooserMutex);
     //printf("finding a shortest queue for customer %d\n", customer->ID);
-    FindShortestQueue(&localQueueLength, &localMutex, &localCondVar,&localQueueHead,&QueueID);
-
-    //printf("found a shortest queue\n");
-    InsertAtTail(customer,&localQueueHead);
-    //printf("inserted at tail of queue\n");
-    localQueueLength = localQueueLength + 1;
-
+    FindShortestQueue(&localMutex, &localCondVar,&localQueueHead,&queueID);
+    //localQueueHead = headOfQueues[queueID];
+    InsertAtTail(customer,&headOfQueues[queueID]);
+    printf("customer inserted at tail of queue: %d\n", queueID);
+    printf("queue that node was added to has memory address %p\n",(void *)&headOfQueues[queueID]);
+    PrintList(&headOfQueues[queueID]);
+    queueLengths[queueID] = queueLengths[queueID] + 1;
+    fprintf(stdout, "A customer enters a queue: the queue ID %1d, and length of the queue %2d. \n",queueID, queueLengths[queueID]);
     pthread_mutex_unlock(&queueChooserMutex);
-    
-    fprintf(stdout, "A customer enters a queue: the queue ID %1d, and length of the queue %2d. \n",QueueID, localQueueLength);
+    printf("mutex was unlocked\n");
+
     sem_post(&numberOfCustomersThreads);
 
     pthread_mutex_lock(&localMutex);
+    printf("waiting for clerk to signal\n");
+    pthread_cond_wait(&localCondVar, &localMutex);
     while(customer->ID != localQueueHead->customer->ID)
     {
+        printf("waiting");
         pthread_cond_wait(&localCondVar, &localMutex);
     }
     pthread_mutex_unlock(&localMutex);
