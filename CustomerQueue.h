@@ -4,7 +4,8 @@ typedef struct Customer
 {
     int ID;
     int arrivalTime;
-    int serviceTime; 
+    int serviceTime;
+    int servicedBy; 
 }Customer;
 typedef struct CustomerNode
 {
