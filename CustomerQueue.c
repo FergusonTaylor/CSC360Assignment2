@@ -12,22 +12,18 @@ CustomerNode* NewCustomerNode(Customer* customer)
 }
 void PrintList(CustomerNode** head)
 {
-  if(head == NULL)
-  {
-    printf("the CustomerNode** head was null\n");
-    return;
-  }
+
   if(*head == NULL)
   {
     printf("the list is empty\n");
     return;
   }
   CustomerNode currentCustomerNode = **head;
-  printf("customer ID: %3d , ", currentCustomerNode.customer->ID);
+  //printf("customer ID: %3d , ", currentCustomerNode.customer->ID);
   while(currentCustomerNode.next != NULL )
   {
     currentCustomerNode = *(currentCustomerNode.next);
-    printf("Customer ID: %3d ,", currentCustomerNode.customer->ID);
+    //printf("Customer ID: %3d ,", currentCustomerNode.customer->ID);
   }
   printf("\n");
 }
@@ -69,7 +65,7 @@ Customer* PopCustomerNode(CustomerNode** headPointer)
 void InsertAtTail(Customer* customer, CustomerNode** head)
 {
   CustomerNode* newCustomerNode = NewCustomerNode(customer);
-  printf("inserting Customer into queue with Customer ID: %d\n", newCustomerNode->customer->ID);
+  //printf("inserting Customer into queue with Customer ID: %d\n", newCustomerNode->customer->ID);
   if(*head == NULL)
   {
     *head = newCustomerNode;

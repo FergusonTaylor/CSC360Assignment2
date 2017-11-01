@@ -1,11 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<semaphore.h>
 typedef struct Customer
 {
     int ID;
     int arrivalTime;
     int serviceTime;
     int servicedBy; 
+    sem_t* clerkSemToPost;
 }Customer;
 typedef struct CustomerNode
 {
