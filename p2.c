@@ -5,6 +5,7 @@
 #include<semaphore.h>
 #include<sys/types.h>
 #include<unistd.h>
+#include<sys/time.h>
 
 #include "CustomerQueue.h"
 
@@ -13,6 +14,7 @@ typedef struct Clerk
     int ID;
     sem_t* servingCustomer;
 }Clerk;
+struct timeval programStartTime;
 
 pthread_mutex_t queueMutexs[4];
 
@@ -34,7 +36,10 @@ void PrintCustomer(Customer customer)
     printf("customer arrivalTime: %d\n",customer.arrivalTime);
     printf("customer serviceTime: %d\n",customer.serviceTime);
 }
-
+float timeDifference(struct timeval t1, struct timeval t2)
+{
+    return ((t1.tv_sec - t2.tv_sec) + (t1.tv_usec - t2.tv_usec) / 1000000.0f);
+}
 Customer* LineToCustomer(char* line, size_t len)
 {
     char IDString[8];
@@ -217,6 +222,10 @@ void * CustomerFunction( void * customerVoid)
 
     //printf("sleeping for %d, with customer ID: %d\n", customer->arrivalTime * 100000, customer->ID);
     usleep(customer->arrivalTime * 100000);
+    struct timeval rawCustomerArrivalTime;
+    gettimeofday(&rawCustomerArrivalTime,NULL);
+
+    float customerArrivalTime = timeDifference(rawCustomerArrivalTime, programStartTime);
     int queueID;
 
     pthread_mutex_lock(&queueChooserMutex);
@@ -243,7 +252,6 @@ void * CustomerFunction( void * customerVoid)
     printf("customer thread customer has memory location: %p\n", (void*) customer);*/
     while(customer->servicedBy == -1)
     {
-        //printf("WAITING!!! \n\n\n\n\n");
         pthread_cond_wait(&queueConds[queueID],&queueMutexs[queueID]);
     }
     //printf("passed while loop\n");
@@ -251,18 +259,26 @@ void * CustomerFunction( void * customerVoid)
     //printf("customer woke up\n");
 
     usleep(customer->serviceTime * 100000);
+    struct timeval rawEndTime;
+    gettimeofday(&rawEndTime, NULL);
 
-    fprintf(stdout, "A clerk finishes serving a customer: end time [need to add], the customer ID %2d, the clerk ID %1d. \n", customer->ID,customer->servicedBy);
+    float endTime = timeDifference(rawEndTime,programStartTime);
+    fprintf(stdout, "A clerk finishes serving a customer: end time %.2f, the customer ID %2d, the clerk ID %1d. \n",endTime, customer->ID,customer->servicedBy);
     sem_post(customer->clerkSemToPost);
     free(customer);
 
-    pthread_exit(NULL);
+    float* waitTime = (float*)malloc(sizeof(float));
+    *waitTime = (endTime-customerArrivalTime);
+    pthread_exit((void *)waitTime);
 
     return NULL;
 }
 
 int main( int argc, char* argv[] )
 {
+    //program start time
+    gettimeofday(&programStartTime,NULL);
+
     CustomerNode* headOfStagingQueue = NULL;
     char* fileName = argv[1];
     char line[1024];
@@ -341,12 +357,23 @@ int main( int argc, char* argv[] )
             printf("failed to create thread for customer with customer ID: %d\n", customer->ID);
         }
     }
+    void* waitingTime[1024];
     int joinIndex;
     for(joinIndex = 0; joinIndex < customerThreadIndex; joinIndex++)
     {
         //printf("trying to join thread %d\n", joinIndex);
-        pthread_join(customerThreads[joinIndex],NULL);
+        pthread_join(customerThreads[joinIndex],&waitingTime[joinIndex]);
         //printf("joined thread %d\n", joinIndex);
     }
-    printf("all threads joined\n");
+    //calculate average wait time
+    printf("joined all thread\n");
+    float averageWaitTime = 0;
+    int avgIndex;
+    for(avgIndex = 0; avgIndex < customerThreadIndex; avgIndex++)
+    {
+        averageWaitTime = averageWaitTime + *((float *)waitingTime[avgIndex]);
+    }
+    averageWaitTime = averageWaitTime/customerThreadIndex;
+    fprintf(stdout,"average wait time for customers was %.2f\n", averageWaitTime);
+    //printf("all threads joined\n");
 }
