@@ -1,13 +1,13 @@
 #include "CustomerQueue.h"
 
-
+//Customer Queue functions for adding and removing customer nodes from a given queue
+//pretty standard queue stuff
 CustomerNode* NewCustomerNode(Customer* customer)
 {
   CustomerNode* newCustomerNode = (CustomerNode*)malloc(sizeof(CustomerNode));
   
   newCustomerNode->customer = customer;
   newCustomerNode->next = NULL;
-  printf("made new customer Node the customer has ID, %d\n", customer->ID);
   return newCustomerNode;
 }
 void PrintList(CustomerNode** head)
@@ -19,11 +19,9 @@ void PrintList(CustomerNode** head)
     return;
   }
   CustomerNode currentCustomerNode = **head;
-  //printf("customer ID: %3d , ", currentCustomerNode.customer->ID);
   while(currentCustomerNode.next != NULL )
   {
     currentCustomerNode = *(currentCustomerNode.next);
-    //printf("Customer ID: %3d ,", currentCustomerNode.customer->ID);
   }
   printf("\n");
 }
@@ -40,14 +38,7 @@ CustomerNode* FindCustomerNodePointer(Customer customer, CustomerNode* head)
   }
   return currentCustomerNode;
 }
-/*Customer CopyOf(Customer customerToCopy)
-{
-  Customer customer = (Customer)malloc(sizeof(Customer));
-  customer.ID = customerToCopy.ID;
-  customer.arrivalTime = customerToCopy.arrivalTime;
-  customer.serviceTime = customerToCopy.serviceTime;
-  return customer;
-}*/
+
 
 Customer* PopCustomerNode(CustomerNode** headPointer)
 {
@@ -65,7 +56,6 @@ Customer* PopCustomerNode(CustomerNode** headPointer)
 void InsertAtTail(Customer* customer, CustomerNode** head)
 {
   CustomerNode* newCustomerNode = NewCustomerNode(customer);
-  //printf("inserting Customer into queue with Customer ID: %d\n", newCustomerNode->customer->ID);
   if(*head == NULL)
   {
     *head = newCustomerNode;
@@ -77,5 +67,4 @@ void InsertAtTail(Customer* customer, CustomerNode** head)
       currentCustomerNode = currentCustomerNode->next;
   }
   currentCustomerNode->next = newCustomerNode;
-
 }
